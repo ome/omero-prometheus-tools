@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 
 import collections
+from datetime import datetime
 import omero.clients
 import omero.cmd
-import prometheus_client
-import time
+from prometheus_client import (
+    Gauge,
+    Summary,
+    start_http_server,
+)
+from time import sleep
 
 
 def connect():
@@ -14,8 +19,14 @@ def connect():
     return client
 
 
+SESSION_REQUEST_TIME = Summary(
+    'omero_sessions_processing_seconds', 'Time spent counting sessions')
+
+
+@SESSION_REQUEST_TIME.time()
 def update(g, lastcounts):
     # https://github.com/openmicroscopy/openmicroscopy/blob/v5.4.0-m1/components/tools/OmeroPy/src/omero/plugins/sessions.py#L714
+    print('\n%s' % datetime.now().isoformat())
     client = connect()
     try:
         cb = client.submit(omero.cmd.CurrentSessionsRequest())
@@ -26,9 +37,9 @@ def update(g, lastcounts):
                 print('%s: %d' % (username, n))
                 g.labels(username).set(n)
             for missing in set(lastcounts.keys()).difference(counts.keys()):
-                print('%s: %d' % (username, 0))
+                print('%s: %d' % (missing, 0))
                 g.remove(missing)
-            lastcounts = counts
+            return counts
         finally:
             cb.close(True)
     finally:
@@ -37,11 +48,10 @@ def update(g, lastcounts):
 
 if __name__ == '__main__':
     lastcounts = {}
-    g = prometheus_client.Gauge(
-        'omero_sessions_active', 'Active OMERO sessions', ['username'])
+    g = Gauge('omero_sessions_active', 'Active OMERO sessions', ['username'])
     # Start up the server to expose the metrics.
-    prometheus_client.start_http_server(8123)
+    start_http_server(8123)
     # Generate some requests.
     while True:
-        update(g, lastcounts)
-        time.sleep(15)
+        lastcounts = update(g, lastcounts)
+        sleep(15)
