@@ -64,8 +64,7 @@ class SessionMetrics(object):
                 for m in missing:
                     if self.verbose:
                         print('%s: %d' % (m, 0))
-                    self.g_sessions.remove(m)
-                    self.lastusers.remove(m)
+                    self.g_sessions.labels(m).set(0)
                 for username, n in counts.iteritems():
                     if self.verbose:
                         print('%s: %d' % (username, n))
