@@ -84,6 +84,8 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--password', default='guest')
     parser.add_argument('-l', '--listen', type=int, required=True,
                         help='Serve metrics on this port (required)')
+    parser.add_argument('-i', '--interval', type=int, default=60,
+                        help='Interval (seconds) between updates, default 60')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Print verbose output')
     args = parser.parse_args()
@@ -93,4 +95,4 @@ if __name__ == '__main__':
         args.host, args.user, args.password, verbose=args.verbose)
     while True:
         metrics.update()
-        sleep(15)
+        sleep(args.interval)
