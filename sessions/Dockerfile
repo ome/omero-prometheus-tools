@@ -10,9 +10,9 @@ RUN pip install omego && \
     omego download python --sym OMERO.py
 
 RUN pip install prometheus_client && \
-    mkdir -p /opt/prometheus-omero-py/ && \
-    curl -so /opt/prometheus-omero-py/metrics.py https://gist.githubusercontent.com/manics/238a63cfd9c2fb8a450252d79e609296/raw/b0ed1edcf662415339d786aeb764c8056386e1a5/metrics.py
+    mkdir -p /opt/prometheus-omero-py/
+ADD metrics.py /opt/prometheus-omero-py/metrics.py
 
 ENV PYTHONPATH=/opt/omero/OMERO.py/lib/python
-ENTRYPOINT ["python", "/opt/prometheus-omero-py/metrics.py", "--listen", "8000"]
+ENTRYPOINT ["/opt/prometheus-omero-py/metrics.py", "--listen", "8000"]
 EXPOSE 8000
