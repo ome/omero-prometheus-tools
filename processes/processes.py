@@ -11,7 +11,7 @@ class ProcessCounter(object):
         self.pset = set()
         self.pnames = dict()
 
-    def addprocess(self, p):
+    def addprocess(self, p, count_children=False):
         if p.pid in self.pset:
             return
         self.np += 1
@@ -22,8 +22,9 @@ class ProcessCounter(object):
             self.pnames[p.name()] += 1
         except KeyError:
             self.pnames[p.name()] = 1
-        for c in p.children():
-            self.addprocess(c)
+        if count_children:
+            for c in p.children():
+                self.addprocess(c)
 
 
 def web():
@@ -37,7 +38,7 @@ def web():
     for p in psutil.process_iter():
         for cmdline in cmdlines:
             if p.cmdline()[:len(cmdline)] == cmdline:
-                pc.addprocess(p)
+                pc.addprocess(p, True)
     print 'TOTAL: processes:{0} threads:{1}, names:{2}'.format(
         pc.np, pc.nt, pc.pnames)
 
@@ -50,6 +51,7 @@ def user(username):
             pc.addprocess(p)
     print 'TOTAL: processes:{0} threads:{1}, names:{2}'.format(
         pc.np, pc.nt, pc.pnames)
+
 
 if __name__ == '__main__':
     for u in sys.argv[1:]:
