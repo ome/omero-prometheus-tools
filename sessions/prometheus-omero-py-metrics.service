@@ -1,12 +1,14 @@
 [Unit]
-Description=prometheus-omero-py
+Description=prometheus-omerosessions
 
 [Service]
-EnvironmentFile=-/etc/sysconfig/prometheus-omero-py
+User=omero-prometheus
+EnvironmentFile=-/etc/sysconfig/prometheus-omerosessions
 Environment="PYTHONPATH=/opt/omero/server/OMERO.server/lib/python"
-ExecStart=/opt/prometheus-omero-py/venv/bin/python /opt/prometheus-omero-py/src/sessions/metrics.py $OPTIONS
+ExecStart=/opt/omero-prometheus-tools/venv/bin/python /opt/omero-prometheus-tools/src/sessions/metrics.py $OPTIONS
 RestartSec=10
 Restart=on-failure
+SyslogIdentifier=prometheus-omerosessions
 
 [Install]
 WantedBy=multi-user.target
