@@ -26,27 +26,28 @@ class ProcessMetrics(object):
         self.usernames = set(usernames)
         self.procnames = set(procnames)
         self.all_procnames = ('*' in self.procnames)
-        if self.all_procnames:
-            self.procnames.remove('*')
         self.verbose = verbose
 
     def reset(self):
-        self.pset = set()
         self.counts = defaultdict(lambda: [0, 0])
 
     def addprocess(self, p):
         username = p.username()
         procname = p.name()
-        if (p.pid in self.pset or
-                (username not in self.usernames) or
-                (not self.all_procnames and procname not in self.procnames)):
+        if (username not in self.usernames) or (
+                not self.all_procnames and procname not in self.procnames):
             return
-        name = procname if procname in self.procnames else '*'
-        self.counts[(username, name)][0] += 1
-        self.counts[(username, name)][1] += p.num_threads()
-        self.pset.add(p.pid)
+        nt = p.num_threads()
+        # WARNING: In the unlikely event that a process is called '*' these
+        # stats will be incorrect
+        if procname in self.procnames:
+            self.counts[(username, procname)][0] += 1
+            self.counts[(username, procname)][1] += nt
+        if self.all_procnames:
+            self.counts[(username, '*')][0] += 1
+            self.counts[(username, '*')][1] += nt
         if self.verbose:
-            print('{0} {1} {2}'.format(username, procname, p.num_threads()))
+            print('{0} {1} {2}'.format(username, procname, nt))
 
     @PROCESS_REQUEST_TIME.time()
     def update(self):
