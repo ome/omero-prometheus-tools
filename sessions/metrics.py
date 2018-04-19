@@ -4,6 +4,7 @@ import argparse
 import collections
 import omero.clients
 import omero.cmd
+import omero
 from prometheus_client import (
     Gauge,
     Summary,
@@ -56,8 +57,9 @@ class SessionMetrics(object):
             return
 
         try:
-            cb = client.submit(omero.cmd.CurrentSessionsRequest(), 60, 500)
+            cb = None
             try:
+                cb = client.submit(omero.cmd.CurrentSessionsRequest(), 60, 500)
                 rsp = cb.loop(60, 500)
                 counts = collections.Counter(c.userName for c in rsp.contexts)
                 missing = self.lastusers.difference(counts.keys())
@@ -70,8 +72,12 @@ class SessionMetrics(object):
                         print('%s: %d' % (username, n))
                     self.g_sessions.labels(username).set(n)
                     self.lastusers.add(username)
+            except omero.CmdError as ce:
+                # Unwrap the CmdError due to failonerror=True
+                raise Exception(ce.err)
             finally:
-                cb.close(True)
+                if cb:
+                    cb.close(True)
         finally:
             client.closeSession()
 
