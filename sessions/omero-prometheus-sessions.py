@@ -36,11 +36,9 @@ class SessionMetrics(object):
     g_login = Gauge('omero_sessions_agent_login',
                     'Prometheus agent logged in to OMERO')
 
-    g_users_active = Gauge('omero_users_active',
-                           'Number of active OMERO users')
-    g_users_inactive = Gauge('omero_users_inactive',
-                             'Number of inactive OMERO users')
-    g_group_count = Gauge('omero_group_count', 'Total number of OMERO groups')
+    g_users_total = Gauge('omero_users_total', 'Number of OMERO users',
+                          ['active'])
+    g_groups_total = Gauge('omero_groups_total', 'Number of OMERO groups')
 
     login_succeeded = False
 
@@ -99,11 +97,11 @@ class SessionMetrics(object):
                     users_active += 1
                 else:
                     users_inactive += 1
-            self.g_users_active.set(users_active)
-            self.g_users_inactive.set(users_inactive)
+            self.g_users_total.labels(1).set(users_active)
+            self.g_users_total.labels(0).set(users_inactive)
 
             group_count = len(adminservice.lookupGroups())
-            self.g_group_count.set(group_count)
+            self.g_groups_total.set(group_count)
 
             if self.verbose:
                 print('Users (active/inactive): %d/%d' % (
