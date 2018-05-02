@@ -1,0 +1,12 @@
+[Unit]
+Description=prometheus-usermetrics
+
+[Service]
+EnvironmentFile=-/etc/sysconfig/prometheus-usermetrics
+ExecStart=/opt/omero-prometheus-tools/venv/bin/python /opt/omero-prometheus-tools/src/processes/metrics.py $OPTIONS
+RestartSec=10
+Restart=on-failure
+SyslogIdentifier=prometheus-usermetrics
+
+[Install]
+WantedBy=multi-user.target

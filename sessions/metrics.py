@@ -5,6 +5,8 @@ import collections
 import omero.clients
 import omero.cmd
 import omero
+from omero.rtypes import unwrap
+
 from prometheus_client import (
     Gauge,
     Summary,
@@ -33,6 +35,11 @@ class SessionMetrics(object):
                          'Time of last Prometheus agent login')
     g_login = Gauge('omero_sessions_agent_login',
                     'Prometheus agent logged in to OMERO')
+
+    g_users_total = Gauge('omero_users_total', 'Number of OMERO users',
+                          ['active'])
+    g_groups_total = Gauge('omero_groups_total', 'Number of OMERO groups')
+
     login_succeeded = False
 
     def __init__(self, hostname, username, password, verbose=False):
@@ -78,6 +85,29 @@ class SessionMetrics(object):
             finally:
                 if cb:
                     cb.close(True)
+
+            adminservice = client.getSession().getAdminService()
+
+            user_group_id = adminservice.getSecurityRoles().userGroupId
+            users_active = 0
+            users_inactive = 0
+            for user in adminservice.lookupExperimenters():
+                if user_group_id in (unwrap(g.getId()) for g in
+                                     user.linkedExperimenterGroupList()):
+                    users_active += 1
+                else:
+                    users_inactive += 1
+            self.g_users_total.labels(1).set(users_active)
+            self.g_users_total.labels(0).set(users_inactive)
+
+            group_count = len(adminservice.lookupGroups())
+            self.g_groups_total.set(group_count)
+
+            if self.verbose:
+                print('Users (active/inactive): %d/%d' % (
+                    users_active, users_inactive))
+                print('Groups: %d' % group_count)
+
         finally:
             client.closeSession()
 
