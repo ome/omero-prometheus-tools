@@ -11,6 +11,6 @@ setup(
     install_requires=[
         'prometheus-client>=0.2,<0.3',
     ],
-    # Allow external access to prometheus-omero-py-metrics.service file
+    # Allow external access to prometheus-omero-sessions.service file
     zip_safe=False,
 )
