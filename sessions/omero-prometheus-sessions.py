@@ -17,7 +17,7 @@ from time import sleep
 
 def connect(hostname, username, password):
     client = omero.client(hostname)
-    client.setAgent('prometheus-omero-py')
+    client.setAgent('prometheus-omero-sessions')
     client.createSession(username, password)
     return client
 
@@ -33,83 +33,64 @@ class SessionMetrics(object):
         'omero_sessions_active', 'Active OMERO sessions', ['username'])
     g_last_login = Gauge('omero_sessions_agent_login_time',
                          'Time of last Prometheus agent login')
-    g_login = Gauge('omero_sessions_agent_login',
-                    'Prometheus agent logged in to OMERO')
 
     g_users_total = Gauge('omero_users_total', 'Number of OMERO users',
                           ['active'])
     g_groups_total = Gauge('omero_groups_total', 'Number of OMERO groups')
 
-    login_succeeded = False
-
-    def __init__(self, hostname, username, password, verbose=False):
-        self.connect_args = dict(
-            hostname=hostname, username=username, password=password)
+    def __init__(self, client, verbose=False):
+        self.client = client
         self.verbose = verbose
+        self.g_last_login.set_to_current_time()
 
     @SESSION_REQUEST_TIME.time()
     def update(self):
         # https://github.com/openmicroscopy/openmicroscopy/blob/v5.4.0-m1/components/tools/OmeroPy/src/omero/plugins/sessions.py#L714
+
+        cb = None
         try:
-            client = connect(**self.connect_args)
-            self.g_login.set(1)
-            self.g_last_login.set_to_current_time()
-            if not self.login_succeeded or self.verbose:
-                print('Login succeeded')
-            self.login_succeeded = True
-        except Exception as e:
-            self.g_login.set(0)
-            print('Login failed: %s' % e)
-            self.login_succeeded = False
-            return
-
-        try:
-            cb = None
-            try:
-                cb = client.submit(omero.cmd.CurrentSessionsRequest(), 60, 500)
-                rsp = cb.loop(60, 500)
-                counts = collections.Counter(c.userName for c in rsp.contexts)
-                missing = self.lastusers.difference(counts.keys())
-                for m in missing:
-                    if self.verbose:
-                        print('%s: %d' % (m, 0))
-                    self.g_sessions.labels(m).set(0)
-                for username, n in counts.iteritems():
-                    if self.verbose:
-                        print('%s: %d' % (username, n))
-                    self.g_sessions.labels(username).set(n)
-                    self.lastusers.add(username)
-            except omero.CmdError as ce:
-                # Unwrap the CmdError due to failonerror=True
-                raise Exception(ce.err)
-            finally:
-                if cb:
-                    cb.close(True)
-
-            adminservice = client.getSession().getAdminService()
-
-            user_group_id = adminservice.getSecurityRoles().userGroupId
-            users_active = 0
-            users_inactive = 0
-            for user in adminservice.lookupExperimenters():
-                if user_group_id in (unwrap(g.getId()) for g in
-                                     user.linkedExperimenterGroupList()):
-                    users_active += 1
-                else:
-                    users_inactive += 1
-            self.g_users_total.labels(1).set(users_active)
-            self.g_users_total.labels(0).set(users_inactive)
-
-            group_count = len(adminservice.lookupGroups())
-            self.g_groups_total.set(group_count)
-
-            if self.verbose:
-                print('Users (active/inactive): %d/%d' % (
-                    users_active, users_inactive))
-                print('Groups: %d' % group_count)
-
+            cb = self.client.submit(
+                omero.cmd.CurrentSessionsRequest(), 60, 500)
+            rsp = cb.loop(60, 500)
+            counts = collections.Counter(c.userName for c in rsp.contexts)
+            missing = self.lastusers.difference(counts.keys())
+            for m in missing:
+                if self.verbose:
+                    print('%s: %d' % (m, 0))
+                self.g_sessions.labels(m).set(0)
+            for username, n in counts.iteritems():
+                if self.verbose:
+                    print('%s: %d' % (username, n))
+                self.g_sessions.labels(username).set(n)
+                self.lastusers.add(username)
+        except omero.CmdError as ce:
+            # Unwrap the CmdError due to failonerror=True
+            raise Exception(ce.err)
         finally:
-            client.closeSession()
+            if cb:
+                cb.close(True)
+
+        adminservice = self.client.getSession().getAdminService()
+
+        user_group_id = adminservice.getSecurityRoles().userGroupId
+        users_active = 0
+        users_inactive = 0
+        for user in adminservice.lookupExperimenters():
+            if user_group_id in (unwrap(g.getId()) for g in
+                                 user.linkedExperimenterGroupList()):
+                users_active += 1
+            else:
+                users_inactive += 1
+        self.g_users_total.labels(1).set(users_active)
+        self.g_users_total.labels(0).set(users_inactive)
+
+        group_count = len(adminservice.lookupGroups())
+        self.g_groups_total.set(group_count)
+
+        if self.verbose:
+            print('Users (active/inactive): %d/%d' % (
+                users_active, users_inactive))
+            print('Groups: %d' % group_count)
 
 
 if __name__ == '__main__':
@@ -124,10 +105,16 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Print verbose output')
     args = parser.parse_args()
-    # Start up the server to expose the metrics.
-    start_http_server(args.listen)
-    metrics = SessionMetrics(
-        args.host, args.user, args.password, verbose=args.verbose)
-    while True:
-        metrics.update()
-        sleep(args.interval)
+
+    client = connect(args.host, args.user, args.password)
+    # Don't catch exception, exit on login failure so user knows
+
+    try:
+        # Start up the server to expose the metrics.
+        start_http_server(args.listen)
+        metrics = SessionMetrics(client, verbose=args.verbose)
+        while True:
+            metrics.update()
+            sleep(args.interval)
+    finally:
+        client.closeSession()
