@@ -35,6 +35,7 @@ class CountMetrics(object):
         ['object', 'group'])
 
     objtypes = (
+        'Fileset',
         'Screen',
         'Plate',
         'Well',
