@@ -1,0 +1,14 @@
+[Unit]
+Description=prometheus-omero-counts
+
+[Service]
+User=omero-prometheus
+EnvironmentFile=-/etc/sysconfig/prometheus-omero-counts
+Environment="PYTHONPATH=/opt/omero/server/OMERO.server/lib/python"
+ExecStart=/opt/prometheus-omero-tools/bin/omero-prometheus-counts.py $OPTIONS
+RestartSec=10
+Restart=on-failure
+SyslogIdentifier=prometheus-omero-counts
+
+[Install]
+WantedBy=multi-user.target
