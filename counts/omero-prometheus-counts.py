@@ -28,7 +28,7 @@ SESSION_REQUEST_TIME = Summary(
 class CountMetrics(object):
 
     lastusers = set()
-    g_last_login = Gauge('omero_sessions_agent_login_time',
+    g_last_login = Gauge('omero_counts_agent_login_time',
                          'Time of last Prometheus agent login')
     g_object_counts = Gauge(
         'omero_objects_total', 'Number of OMERO objects',
