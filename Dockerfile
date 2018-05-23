@@ -12,7 +12,9 @@ RUN pip install omego && \
     omego download python --sym OMERO.py && \
     echo /opt/omero/OMERO.py/lib/python > /usr/lib/python2.7/site-packages/omero.pth
 
-RUN pip install https://github.com/manics/omero-prometheus-tools/archive/pip-package.zip
-
-ENTRYPOINT ["/usr/bin/omero-prometheus-sessions.py", "--listen", "8000"]
-EXPOSE 8000
+COPY *.py /opt/omero-prometheus-tools/
+COPY counts /opt/omero-prometheus-tools/counts/
+COPY sessions /opt/omero-prometheus-tools/sessions/
+COPY service /opt/omero-prometheus-tools/service/
+RUN cd /opt/omero-prometheus-tools/ && \
+    python setup.py install
