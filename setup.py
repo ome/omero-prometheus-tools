@@ -7,14 +7,15 @@ setup(
         'counts/omero-prometheus-counts.py',
     ],
     data_files=[
-        ('service', [
-            'service/prometheus-omero-sessions.service',
-            'service/prometheus-omero-counts.service',
+        ('etc', [
+            'etc/prometheus-omero-sessions.service',
+            'etc/prometheus-omero-counts.service',
+            'etc/prometheus-omero-counts.yml',
         ]),
     ],
     install_requires=[
         'prometheus-client>=0.2,<0.3',
     ],
-    # Allow external access to prometheus-omero-sessions.service file
+    # Allow external access to etc files
     zip_safe=False,
 )

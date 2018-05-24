@@ -15,6 +15,6 @@ RUN pip install omego && \
 COPY *.py /opt/omero-prometheus-tools/
 COPY counts /opt/omero-prometheus-tools/counts/
 COPY sessions /opt/omero-prometheus-tools/sessions/
-COPY service /opt/omero-prometheus-tools/service/
+COPY etc /opt/omero-prometheus-tools/etc/
 RUN cd /opt/omero-prometheus-tools/ && \
     python setup.py install
