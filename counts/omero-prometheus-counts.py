@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+
 import omero.clients
 import omero.cmd
 import omero
@@ -11,7 +12,8 @@ from prometheus_client import (
     Summary,
     start_http_server,
 )
-from time import sleep
+from time import sleep, time
+import yaml
 
 
 def connect(hostname, username, password):
@@ -22,7 +24,31 @@ def connect(hostname, username, password):
 
 
 SESSION_REQUEST_TIME = Summary(
-    'omero_sessions_processing_seconds', 'Time spent counting sessions')
+    'omero_counts_processing_seconds', 'Time spent counting sessions')
+
+
+class QueryMetric(object):
+    def __init__(self, name, cfg, verbose):
+        self.name = name
+        description = cfg['description']
+        self.query = cfg['query']
+        labels = cfg['labels']
+        # Let prometheus_client handle name validation
+        self.prometheus_gauge = Gauge(self.name, description, labels)
+        self.verbose = verbose
+
+    def update(self, queryservice):
+        results = queryservice.projection(
+            self.query, None, {'omero.group': '-1'})
+        if not results:
+            if self.verbose:
+                print('%s NULL' % self.name)
+        for r in results:
+            labelvalues = unwrap(r[1:])
+            value = unwrap(r[0])
+            self.prometheus_gauge.labels(*labelvalues).set(value)
+            if self.verbose:
+                print('%s %s %s' % (self.name, labelvalues, value))
 
 
 class CountMetrics(object):
@@ -30,46 +56,33 @@ class CountMetrics(object):
     lastusers = set()
     g_last_login = Gauge('omero_counts_agent_login_time',
                          'Time of last Prometheus agent login')
-    g_object_counts = Gauge(
-        'omero_objects_total', 'Number of OMERO objects',
-        ['object', 'group'])
 
-    objtypes = (
-        'Fileset',
-        'Screen',
-        'Plate',
-        'Well',
-        'Project',
-        'Dataset',
-        'Image',
-    )
-
-    def __init__(self, client, verbose=False):
+    def __init__(self, client, configfiles, verbose=False):
         self.client = client
         self.verbose = verbose
         self.g_last_login.set_to_current_time()
 
-    def _count_objects(self, objtype):
-        qs = self.client.getSession().getQueryService()
-        res = qs.projection(
-            'SELECT details.group.name, COUNT(*) FROM %s '
-            'GROUP BY details.group.name' % objtype,
-            None, {'omero.group': '-1'})
-        counts = dict((unwrap(r[0]), unwrap(r[1])) for r in res)
-        return counts
+        self.metrics = {}
+        for f in configfiles:
+            with open(f) as fh:
+                cfg = yaml.load(fh)
+            for name in cfg:
+                if name in self.metrics:
+                    raise Exception(
+                        'Duplicate metric name found: %s' % name)
+                self.metrics[name] = QueryMetric(name, cfg[name], verbose)
 
     @SESSION_REQUEST_TIME.time()
     def update(self):
-        for objtype in self.objtypes:
-            counts = self._count_objects(objtype)
-            for (group, n) in counts.items():
-                self.g_object_counts.labels(objtype, group).set(n)
-            if self.verbose:
-                print('%s count per group: %s' % (objtype, counts))
+        queryservice = self.client.getSession().getQueryService()
+        for metric in self.metrics.values():
+            metric.update(queryservice)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config', action='append',
+                        help='Query configuration files')
     parser.add_argument('-s', '--host', default='localhost')
     parser.add_argument('-u', '--user', default='guest')
     parser.add_argument('-w', '--password', default='guest')
@@ -87,9 +100,12 @@ if __name__ == '__main__':
     try:
         # Start up the server to expose the metrics.
         start_http_server(args.listen)
-        metrics = CountMetrics(client, verbose=args.verbose)
+        metrics = CountMetrics(client, args.config, args.verbose)
         while True:
+            starttm = time()
             metrics.update()
-            sleep(args.interval)
+            endtm = time()
+            # HQL queries may take a long time
+            sleep(max(args.interval + endtm - starttm, 0))
     finally:
         client.closeSession()

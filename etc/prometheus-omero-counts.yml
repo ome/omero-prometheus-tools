@@ -1,0 +1,43 @@
+# HQL queries for fetching metrics
+# Inspired by the postgres-exporter configuration
+# https://github.com/wrouesnel/postgres_exporter/blob/v0.4.6/queries.yaml
+
+# Format is
+#
+#     metric_name
+#       description: Description of the metric
+#       query: HQL query that returns <NUMBER> [<STRING> ...]
+#       labels: [<LABEL> ...]
+#
+# <NUMBER> is the metric value
+# Optional <STRING>s and <LABEL>s are label values and names
+
+omero_counts_datasets_total:
+  description: Number of datasets in a group
+  query: SELECT COUNT(*), details.group.name FROM Dataset GROUP BY details.group.name
+  labels: [group]
+
+omero_counts_filesets_total:
+  description: Number of filesets in a group
+  query: SELECT COUNT(*), details.group.name FROM Fileset GROUP BY details.group.name
+  labels: [group]
+
+omero_counts_images_total:
+  description: Number of images in a group
+  query: SELECT COUNT(*), details.group.name FROM Image GROUP BY details.group.name
+  labels: [group]
+
+omero_counts_plate_total:
+  description: Number of plate in a group
+  query: SELECT COUNT(*), details.group.name FROM Plate GROUP BY details.group.name
+  labels: [group]
+
+omero_counts_projects_total:
+  description: Number of projects in a group
+  query: SELECT COUNT(*), details.group.name FROM Project GROUP BY details.group.name
+  labels: [group]
+
+omero_counts_screens_total:
+  description: Number of screens in a group
+  query: SELECT COUNT(*), details.group.name FROM Screen GROUP BY details.group.name
+  labels: [group]

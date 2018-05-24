@@ -15,6 +15,7 @@ setup(
     ],
     install_requires=[
         'prometheus-client>=0.2,<0.3',
+        'PyYAML',
     ],
     # Allow external access to etc files
     zip_safe=False,
