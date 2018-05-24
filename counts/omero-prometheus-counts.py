@@ -36,6 +36,8 @@ class QueryMetric(object):
         # Let prometheus_client handle name validation
         self.prometheus_gauge = Gauge(self.name, description, labels)
         self.verbose = verbose
+        # HQL count won't return 0 so need to explicitly delete labelsets
+        self.labelsets = set()
 
     def update(self, queryservice):
         results = queryservice.projection(
@@ -43,12 +45,20 @@ class QueryMetric(object):
         if not results:
             if self.verbose:
                 print('%s NULL' % self.name)
+        prev_labelsets = self.labelsets
+        self.labelsets = set()
         for r in results:
             labelvalues = unwrap(r[1:])
             value = unwrap(r[0])
             self.prometheus_gauge.labels(*labelvalues).set(value)
+            self.labelsets.add(tuple(labelvalues))
             if self.verbose:
                 print('%s %s %s' % (self.name, labelvalues, value))
+        # Now delete absent labelsets
+        for rm in prev_labelsets.difference(self.labelsets):
+            self.prometheus_gauge.remove(*rm)
+            if self.verbose:
+                print('Removed %s %s' % (self.name, rm))
 
 
 class CountMetrics(object):
