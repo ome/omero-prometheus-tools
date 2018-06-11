@@ -8,8 +8,6 @@ setup(
     ],
     data_files=[
         ('etc', [
-            'etc/prometheus-omero-sessions.service',
-            'etc/prometheus-omero-counts.service',
             'etc/prometheus-omero-counts.yml',
         ]),
     ],
