@@ -5,5 +5,4 @@ services:
 
 script:
   - docker build -t omero-prometheus-tools .
-  - docker run omero-prometheus-tools omero-prometheus-counts.py --help
-  - docker run omero-prometheus-tools omero-prometheus-sessions.py --help
+  - docker run omero-prometheus-tools omero-prometheus-tools.py --help

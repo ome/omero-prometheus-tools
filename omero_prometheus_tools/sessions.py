@@ -1,18 +1,14 @@
 #!/usr/bin/env python
 
-import argparse
 import collections
 import omero.clients
 import omero.cmd
-import omero
 from omero.rtypes import unwrap
 
 from prometheus_client import (
     Gauge,
     Summary,
-    start_http_server,
 )
-from time import sleep
 
 
 def connect(hostname, username, password):
@@ -91,30 +87,3 @@ class SessionMetrics(object):
             print('Users (active/inactive): %d/%d' % (
                 users_active, users_inactive))
             print('Groups: %d' % group_count)
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--host', default='localhost')
-    parser.add_argument('-u', '--user', default='guest')
-    parser.add_argument('-w', '--password', default='guest')
-    parser.add_argument('-l', '--listen', type=int, required=True,
-                        help='Serve metrics on this port (required)')
-    parser.add_argument('-i', '--interval', type=int, default=60,
-                        help='Interval (seconds) between updates, default 60')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='Print verbose output')
-    args = parser.parse_args()
-
-    client = connect(args.host, args.user, args.password)
-    # Don't catch exception, exit on login failure so user knows
-
-    try:
-        # Start up the server to expose the metrics.
-        start_http_server(args.listen)
-        metrics = SessionMetrics(client, verbose=args.verbose)
-        while True:
-            metrics.update()
-            sleep(args.interval)
-    finally:
-        client.closeSession()

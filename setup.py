@@ -3,13 +3,15 @@ setup(
     name='omero-prometheus-tools',
     version='0.0.1',
     scripts=[
-        'sessions/omero-prometheus-sessions.py',
-        'counts/omero-prometheus-counts.py',
+        'omero_prometheus_tools/omero-prometheus-tools.py',
     ],
     data_files=[
         ('etc', [
             'etc/prometheus-omero-counts.yml',
         ]),
+    ],
+    packages=[
+        'omero_prometheus_tools',
     ],
     install_requires=[
         'prometheus-client>=0.2,<0.3',
