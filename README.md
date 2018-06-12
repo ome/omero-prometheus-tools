@@ -13,7 +13,7 @@ Install OMERO.py into the virtualenv.
 ## Running
 
     /opt/prometheus-omero-tools/bin/omero-prometheus-tools.py
-      -s omero.example.org -u public -w public -l 9123
+      -s omero.example.org -u public -w public
       [-c /opt/prometheus-omero-tools/etc/prometheus-omero-counts.yml ...]
 
-Metrics will be published on http://localhost:9123
+Metrics will be published on http://localhost:9449
