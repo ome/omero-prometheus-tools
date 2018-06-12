@@ -3,7 +3,10 @@
 import argparse
 import omero.clients
 
-from prometheus_client import start_http_server
+from prometheus_client import (
+    Gauge,
+    start_http_server,
+)
 from time import (
     sleep,
     time,
@@ -36,8 +39,12 @@ if __name__ == '__main__':
                         help='Print verbose output')
     args = parser.parse_args()
 
+    g_last_login = Gauge('omero_prometheus_tools_agent_login_time',
+                         'Time of last Prometheus agent login')
+
     client = connect(args.host, args.user, args.password)
     # Don't catch exception, exit on login failure so user knows
+    g_last_login.set_to_current_time()
 
     try:
         # Start up the server to expose the metrics.

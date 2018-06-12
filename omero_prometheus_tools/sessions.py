@@ -27,9 +27,6 @@ class SessionMetrics(object):
     lastusers = set()
     g_sessions = Gauge(
         'omero_sessions_active', 'Active OMERO sessions', ['username'])
-    g_last_login = Gauge('omero_sessions_agent_login_time',
-                         'Time of last Prometheus agent login')
-
     g_users_total = Gauge('omero_users_total', 'Number of OMERO users',
                           ['active'])
     g_groups_total = Gauge('omero_groups_total', 'Number of OMERO groups')
@@ -37,7 +34,6 @@ class SessionMetrics(object):
     def __init__(self, client, verbose=False):
         self.client = client
         self.verbose = verbose
-        self.g_last_login.set_to_current_time()
 
     @SESSION_REQUEST_TIME.time()
     def update(self):

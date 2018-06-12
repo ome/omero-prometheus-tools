@@ -57,14 +57,9 @@ class QueryMetric(object):
 
 class CountMetrics(object):
 
-    lastusers = set()
-    g_last_login = Gauge('omero_counts_agent_login_time',
-                         'Time of last Prometheus agent login')
-
     def __init__(self, client, configfiles, verbose=False):
         self.client = client
         self.verbose = verbose
-        self.g_last_login.set_to_current_time()
 
         self.metrics = {}
         for f in configfiles:
