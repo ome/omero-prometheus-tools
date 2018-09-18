@@ -1,0 +1,12 @@
+#!/bin/bash
+set -eu
+
+OMERO=/opt/omero/server/OMERO.server/bin/omero
+$OMERO login -C -s localhost -u root -w omero
+$OMERO group add "بيئة مجهرية مفتوحة"
+$OMERO user add -P ome микроскопом-пони микроскопом пони "بيئة مجهرية مفتوحة"
+# Login as микроскопом-пони fails with a unicode error so create
+# an ascii username instead
+$OMERO user add -P ome test-user test user "بيئة مجهرية مفتوحة"
+$OMERO login -C -s localhost -u test-user -w ome
+$OMERO obj new Project name=project
