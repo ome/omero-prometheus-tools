@@ -4,12 +4,5 @@ services:
   - docker
 
 script:
-  - IP=`ip addr show eth0 | sed -nre 's/\s+inet ([0-9\.]+).*/\1/p'`
-  - echo $IP
-  - git clone --single-branch --branch setup-external git://github.com/manics/omero-test-infra .omero
-  - env "NOCLEAN=true" "OMERO_SERVER_SSL=4064:" .omero/docker setup
-  - docker build -t omero-prometheus-tools .
-  - docker run -d --rm --name omero-prometheus-tools -p 9449:9449 omero-prometheus-tools -s $IP -u root -w omero -c /opt/omero-prometheus-tools/etc/prometheus-omero-counts.yml -v
-  - sleep 10
-  - docker logs omero-prometheus-tools
-  - ./test.py
+  - git clone git://github.com/openmicroscopy/omero-test-infra .omero
+  - .omero/docker lib
