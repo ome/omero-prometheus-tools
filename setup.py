@@ -1,7 +1,7 @@
 from setuptools import setup
 setup(
     name='omero-prometheus-tools',
-    version='0.1.2',
+    version='0.1.3',
     scripts=[
         'omero_prometheus_tools/omero-prometheus-tools.py',
     ],
