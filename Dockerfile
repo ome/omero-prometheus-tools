@@ -1,11 +1,16 @@
-FROM continuumio/miniconda3:4.7.12-alpine
+FROM continuumio/miniconda3:4.7.12-alpine as builder
 
+USER root
+
+COPY . /omero-prometheus-tools/
+RUN cd /omero-prometheus-tools/ && \
+    /opt/conda/bin/python setup.py sdist bdist_wheel
+
+######################################################################
+
+FROM continuumio/miniconda3:4.7.12-alpine
 # https://jcrist.github.io/conda-docker-tips.html
 RUN /opt/conda/bin/conda install -y -q -c ome omero-py nomkl
-
-COPY *.py /opt/omero-prometheus-tools/
-COPY omero_prometheus_tools /opt/omero-prometheus-tools/omero_prometheus_tools/
-COPY etc /opt/omero-prometheus-tools/etc/
-RUN cd /opt/omero-prometheus-tools/ && \
-    /opt/conda/bin/pip install .
+COPY --from=builder /omero-prometheus-tools/dist/*.whl .
+RUN /opt/conda/bin/pip install *.whl
 ENTRYPOINT ["/opt/conda/bin/omero-prometheus-tools.py"]
