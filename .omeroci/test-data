@@ -1,7 +1,9 @@
 #!/bin/bash
 set -eux
 
-OMERO=${OMERO_DIST:-/opt/omero/server/OMERO.server}/bin/omero
+export LANG=en_GB.utf8
+
+OMERO=/opt/omero/server/venv3/bin/omero
 $OMERO login -C -s localhost -u root -w omero
 $OMERO group add "بيئة مجهرية مفتوحة"
 $OMERO user add -P ome микроскопом-пони микроскопом пони "بيئة مجهرية مفتوحة"

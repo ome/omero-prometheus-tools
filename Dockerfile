@@ -1,5 +1,6 @@
 FROM continuumio/miniconda3:4.7.12-alpine
 
+# https://jcrist.github.io/conda-docker-tips.html
 RUN /opt/conda/bin/conda install -y -q -c ome omero-py nomkl
 
 COPY *.py /opt/omero-prometheus-tools/

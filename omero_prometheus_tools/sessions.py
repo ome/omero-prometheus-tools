@@ -44,14 +44,13 @@ class SessionMetrics(object):
             cb = self.client.submit(
                 omero.cmd.CurrentSessionsRequest(), 60, 500)
             rsp = cb.loop(60, 500)
-            counts = collections.Counter(
-                c.userName.decode('utf-8', 'replace') for c in rsp.contexts)
+            counts = collections.Counter(c.userName for c in rsp.contexts)
             missing = self.lastusers.difference(counts.keys())
             for m in missing:
                 if self.verbose:
                     print('%s: %d' % (m, 0))
                 self.g_sessions.labels(m).set(0)
-            for username, n in counts.iteritems():
+            for username, n in counts.items():
                 if self.verbose:
                     print('%s: %d' % (username, n))
                 self.g_sessions.labels(username).set(n)
