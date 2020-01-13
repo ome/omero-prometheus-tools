@@ -5,10 +5,8 @@ Breaking changes may be made without warning.
 
 ## Installation
 
-    virtualenv /opt/prometheus-omero-tools
+    python3 -mvenv /opt/prometheus-omero-tools
     /opt/prometheus-omero-tools/bin/python setup.py install
-
-Install OMERO.py into the virtualenv.
 
 ## Running
 
