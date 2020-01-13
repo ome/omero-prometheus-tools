@@ -42,9 +42,7 @@ class QueryMetric(object):
         prev_labelsets = self.labelsets
         self.labelsets = set()
         for r in results:
-            # OMERO unicode rstrings are not Python unicode
-            labelvalues = [
-                lv.decode('utf-8', 'replace') for lv in unwrap(r[1:])]
+            labelvalues = [lv for lv in unwrap(r[1:])]
             value = unwrap(r[0])
             self.prometheus_gauge.labels(*labelvalues).set(value)
             self.labelsets.add(tuple(labelvalues))

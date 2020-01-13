@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eux
 
-docker run --link $CID:omero --net $NETWORK --rm -d -p 9449:9449 --name omero-prometheus-tools test -s omero -u root -w omero -c /opt/omero-prometheus-tools/etc/prometheus-omero-counts.yml -v
+docker run --link $CID:omero --net $NETWORK --rm -d -p 9449:9449 --name omero-prometheus-tools test -s omero -u root -w omero -c /opt/conda/etc/prometheus-omero-counts.yml -v
 sleep 10
 ./test.py
 if [ "$NOCLEAN" != "true" ]; then

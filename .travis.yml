@@ -1,16 +1,16 @@
 language: python
-python: 2.7
-sudo: required
+python: 3.6
 services:
   - docker
 
 script:
-  - git clone git://github.com/openmicroscopy/omero-test-infra .omero
+  - git clone git://github.com/ome/omero-test-infra .omero
   - .omero/docker lib
 
 deploy:
   provider: pypi
   user: $PYPI_USER
   password: $PYPI_PASSWORD
+  distributions: sdist bdist_wheel
   on:
     tags: true
