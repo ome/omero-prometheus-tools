@@ -1,3 +1,7 @@
+[![OMERO](https://github.com/ome/omero-prometheus-tools/workflows/OMERO/badge.svg)](https://github.com/ome/omero-prometheus-tools/actions)
+
+[![PyPI version](https://badge.fury.io/py/omero-prometheus-tools.svg)](https://badge.fury.io/py/omero-prometheus-tools)
+
 # Tools for monitoring OMERO with Prometheus
 
 This repository is under development.
