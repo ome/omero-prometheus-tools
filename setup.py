@@ -1,7 +1,7 @@
 from setuptools import setup
 setup(
     name='omero-prometheus-tools',
-    version='0.2.1',
+    version='0.2.2.dev0',
     description='Tools for monitoring OMERO with Prometheus',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
