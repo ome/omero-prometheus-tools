@@ -64,7 +64,7 @@ class CountMetrics(object):
         self.metrics = {}
         for f in configfiles:
             with open(f) as fh:
-                cfg = yaml.load(fh)
+                cfg = yaml.load(fh, Loader=yaml.FullLoader)
             for name in cfg:
                 if name in self.metrics:
                     raise Exception(
