@@ -68,11 +68,17 @@ class SessionMetrics(object):
         users_active = 0
         users_inactive = 0
         for user in adminservice.lookupExperimenters():
-            if user_group_id in (unwrap(g.getId()) for g in
-                                 user.linkedExperimenterGroupList()):
+
+            gids = set()
+            for gem in user.iterateGroupExperimenterMap():
+                if gem and gem.parent:
+                    gids.add(unwrap(gem.parent.getId()))
+
+            if user_group_id in gids:
                 users_active += 1
             else:
                 users_inactive += 1
+
         self.g_users_total.labels(1).set(users_active)
         self.g_users_total.labels(0).set(users_inactive)
 
