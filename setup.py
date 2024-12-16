@@ -19,7 +19,7 @@ setup(
     install_requires=[
         'omero-py>=5.6.0',
         # TODO: Update to current release 0.7.*
-        'prometheus-client',
+        'prometheus-client==0.2.*',
         'PyYAML',
     ],
     python_requires='>=3',
